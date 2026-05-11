@@ -1,115 +1,96 @@
-<h1 align="center">Arena-Hard-Auto Judge</h1>
+# Lana-KI / Carpuncle Cloud
 
-<p align="center">
-  <img alt="Arena-Hard-Auto Judge Flow" src="assets/flow-diagram.png">
-</p>
+## Executive-Projektbeschreibung (ausführlich)
+**Lana-KI** ist die lokale KI-Operationsplattform von **Thomas Heckhoff**. Sie steuert ein verteiltes Multi-Node-System, priorisiert lokalen Compute und setzt Cloud-Ressourcen nur gezielt für Burst/Experimente ein.
 
-<p align="center">
-    Build a data-driven model leaderboard from your existing LLM traces. No hand-written evals or ground truth required.
-</p>
+## 1) Einordnung
+Lana-KI soll gleichzeitig auf mehreren Servern agieren, um Aufgaben automatisiert zu erledigen:
+- Dateien/Programme erzeugen, aktualisieren, korrigieren
+- Endpunkte prüfen, erstellen, reparieren
+- Services überwachen (Ports, Prozesse, Logs, Health)
+- API-basierte Expertenmodelle als Beratungsschicht einbinden
+- Mehrere KI-Bots parallel zur Lösungsfindung nutzen
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#quick-start"><strong>Quick Start</strong></a> ·
-  <a href="#running-the-example"><strong>Running the Example</strong></a> ·
-  <a href="#how-it-works"><strong>How It Works</strong></a>
-</p>
+**Betriebsgrenze:** Kein unkontrollierter „All-Access-Modus“. Schreibzugriffe erfolgen policy-gesteuert, nachvollziehbar und auditpflichtig.
 
-<br/>
+---
 
-## Features
+## 2) Feste Architekturentscheidung
+- **RTX Desktop** = Primary Compute / Primary Inference / Main Orchestrator
+- **RunPod** = elastisches Burst-Backend (nicht primär)
+- **Hetzner Node A** = Public Edge / API / Gateway / Coordination
+- **GCP** = experimentell / isoliert
+- **NAS/FritzBox** = Vault / Restore / Backup / VPN-Kontext
+- **Laptop** = Admin-/Audit-Hub
 
-- **No Ground Truth Required** - Evaluate models using pairwise comparisons on your existing conversation traces
-- **Arena-Hard-Auto Methodology** - Battle-tested approach using LLM judges to compare model responses
-- **Multiple Model Support** - Test GPT-4.1, Fireworks models, Gemini, and more in a single run
-- **Statistical Confidence** - Win rates with confidence intervals, not gut feelings
-- **Production-Ready** - Built on [Eval Protocol](https://github.com/eval-protocol/python-sdk) with support for Langfuse, Braintrust, and LangSmith
-- **Interactive Results** - Local leaderboard UI for analyzing performance, cost, and latency metrics
-
-## Quick Start
-
-### Installation
-
-```bash
-pip install "eval-protocol[langfuse]"
+### Architekturfluss
+```text
+Internet
+  -> Cloudflare Proxy
+    -> gateway.lana-ki.de
+      -> Hetzner Node A (Ingress, API, MCP, Routing)
+        -> RTX Desktop (LM Studio + ComfyUI + Agent Runtime)
+        -> RunPod (Burst GPU Worker)
+        -> GCP (Experimental Worker)
+      -> NAS/Vault (Backups, Restore, Audit-Archive)
 ```
 
-### Environment Setup
+---
 
-Set up your API keys for the models and tracing platform you want to use:
+## 3) Verzeichnis- und Pfadmodell (Windows)
+- **Projekt (non-git):** `C:\Carpuncle Cloud\Lana KI`
+- **Git-Doku/Audit:** `C:\Carpuncle Cloud\Lana KI\Lana Git`
+- **Userordner:** `C:\Carpuncle Cloud\carpuncle.V6`
+- **Root-ENV:** `C:\Carpuncle Cloud\.env`
+- **Portable Tools:** `C:\Carpuncle Cloud\Tools`
 
-```bash
-# Model API keys (choose what you need)
-export OPENAI_API_KEY="your_openai_key"
-export FIREWORKS_API_KEY="your_fireworks_key"
+---
 
-# Langfuse keys
-export LANGFUSE_PUBLIC_KEY="your_public_key"
-export LANGFUSE_SECRET_KEY="your_secret_key"
-export LANGFUSE_HOST="https://your-deployment.com"  # Optional
-```
+## 4) Rollenmodell je Node
+### Node A — Hetzner Edge
+**Aufgaben:** Cloudflare Tunnel, Reverse Proxy, API Routing, MCP Gateway, OAuth Redirects, Webhook Intake, Queue Coordination, Monitoring/Healthchecks.  
+**Nicht Aufgaben:** Primäre LLM-Inferenz, schwere GPU-Jobs, Haupt-Secret-Speicher, Primärdatenhaltung.
 
-## Running the Example
+### Node B — RTX Desktop (PRIMARY)
+Primary Inference, ComfyUI, LM Studio API, Main Orchestration, FastAPI local, Agent Runtime, Development.
 
-This example evaluates multiple models against your Langfuse traces using pairwise comparisons:
+### Node C — NAS/Vault
+Backup, Restore, Cold Storage, Audit-Archive, Secret-Referenzablage.
 
-```bash
-python -m pytest quickstart.py -vs
-```
+### Node D — Laptop
+Admin-Steuerung, Emergency Control, Monitoring, Read-only Audit.
 
-### What's Happening
+### Node E — GCP
+Temporary/Experimental Workloads.
 
-1. **Fetch traces** from your Langfuse instance
-2. **Extract test cases** from multi-turn conversations (each assistant response becomes a test)
-3. **Run three models** in parallel: GPT-4.1 and two Fireworks models
-4. **Compare responses** using a Kimi-K2-0905-Instruct LLM judge (Arena-Hard-Auto methodology)
-5. **Display results** with a link to your local leaderboard
+### Node F — RunPod
+Burst GPU, Batch Jobs, Training, Fallback Rendering.
 
-See the full code in [`quickstart.py`](quickstart.py).
+---
 
-### Viewing Results
+## 5) Betriebsprinzipien
+1. Lokal zuerst (RTX ist führend).
+2. Edge trennt Ingress von Compute.
+3. Secrets niemals im Klartext in Doku/Logs/Chat.
+4. Jede Änderung wird automatisch protokolliert.
+5. Kein Super-Agent; stattdessen capability-scoped Agenten.
+6. Read/Write-Trennung für sichere Automatisierung.
 
-After running the test, start the local UI server:
+---
 
-```bash
-ep logs
-```
+## 6) Priorisierte Implementierungsreihenfolge
+1. RTX Desktop stabilisieren
+2. State/Vault lokal absichern
+3. Hetzner Node A härten
+4. Cloudflare-Limits/Ingress sauber setzen
+5. Secret-Rotation etablieren
+6. Audit-Pipeline automatisieren
+7. RunPod Burst integrieren
+8. GCP später ausbauen
 
-You'll see output like:
+---
 
-```
-================================================================================
-📊 LOCAL UI EVALUATION RESULTS
-================================================================================
-📊 Invocation messy-party-41:
-  📊 Aggregate scores: http://localhost:8000/pivot?filterConfig=...
-  📋 Trajectories: http://localhost:8000/table?filterConfig=...
-================================================================================
-```
-
-Click the aggregate scores link to view your model leaderboard with:
-- Win rates and confidence intervals
-- Cost per evaluation
-- Latency metrics
-- Individual judgment details
-
-<p align="center">
-  <img alt="Arena-Hard-Auto Judge - Build a data-driven model leaderboard" src="assets/quickstart-leaderboard.png">
-</p>
-
-## How It Works
-
-**Arena-Hard-Auto** is a pairwise comparison methodology where:
-
-1. **Two models** respond to the same prompt from your traces
-2. **An LLM judge** compares the responses in two rounds (A vs B, then B vs A) to reduce position bias
-3. **Win rates** are calculated across many comparisons using bootstrap aggregation
-4. **No ground truth needed** - just relative quality assessment
-
-This approach has been validated against human preferences and correlates well with other benchmark methods.
-
-## Learn More
-
-- [Eval Protocol Documentation](https://evalprotocol.io/introduction)
-- [Arena-Hard-Auto Paper](https://arxiv.org/abs/2406.11939)
-- [LiteLLM Supported Models](https://docs.litellm.ai/docs/providers)
+## 7) Projektdokumente
+- `README.md` — Executive-Projektbeschreibung
+- `LANA_SYSTEM_BASELINE.md` — Technische Baseline
+- `Lana_Notizbuch.md` — Automatische Protokollierung, Loop, SharePoint/GitHub-Export
