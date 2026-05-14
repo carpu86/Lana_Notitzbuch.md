@@ -8,8 +8,8 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Lana API")
 
-LM_STUDIO_BASE = os.getenv("LM_STUDIO_BASE_URL", "http://127.0.0.1:1234/v1")
-COMFYUI_BASE = os.getenv("COMFYUI_BASE_URL", "http://127.0.0.1:8188")
+LM_STUDIO_BASE = os.getenv("LM_STUDIO_BASE_URL")
+COMFYUI_BASE = os.getenv("COMFYUI_BASE_URL")
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "30"))
 
 
@@ -30,6 +30,8 @@ def health():
 
 @app.get("/api/v1/models")
 async def models():
+    if not LM_STUDIO_BASE:
+        raise HTTPException(status_code=500, detail="LM_STUDIO_BASE_URL missing")
     async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
         try:
             r = await client.get(f"{LM_STUDIO_BASE}/models")
@@ -41,6 +43,8 @@ async def models():
 
 @app.post("/api/v1/chat")
 async def chat(payload: ChatRequest):
+    if not LM_STUDIO_BASE:
+        raise HTTPException(status_code=500, detail="LM_STUDIO_BASE_URL missing")
     async def stream_gen():
         async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
             try:
@@ -57,6 +61,8 @@ async def chat(payload: ChatRequest):
 
 @app.post("/api/v1/comfy")
 async def comfy(payload: ComfyRequest):
+    if not COMFYUI_BASE:
+        raise HTTPException(status_code=500, detail="COMFYUI_BASE_URL missing")
     async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
         try:
             r = await client.post(f"{COMFYUI_BASE}/prompt", json=payload.model_dump())
