@@ -1,0 +1,16 @@
+name = "lana-auth-worker"
+main = "worker.ts"
+compatibility_date = "2026-05-14"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lana_d1"
+database_id = "REPLACE_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "OUTPUTS"
+bucket_name = "lana-outputs"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_KV_NAMESPACE_ID"

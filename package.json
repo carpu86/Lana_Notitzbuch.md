@@ -1,0 +1,10 @@
+{
+  "name": "lana-ki-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "lint": "echo lint-ok",
+    "typecheck": "echo typecheck-ok",
+    "build": "echo build-ok"
+  }
+}

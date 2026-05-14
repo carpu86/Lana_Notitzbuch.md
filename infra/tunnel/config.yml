@@ -1,0 +1,6 @@
+tunnel: REPLACE_TUNNEL_ID
+credentials-file: C:\\path\\to\\credentials.json
+ingress:
+  - hostname: gateway.lana-ki.de
+    service: http://127.0.0.1:8010
+  - service: http_status:404

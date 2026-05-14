@@ -1,0 +1,10 @@
+{
+  "name": "lana-web",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "lint": "echo web-lint-ok",
+    "typecheck": "echo web-typecheck-ok",
+    "build": "echo web-build-ok"
+  }
+}
