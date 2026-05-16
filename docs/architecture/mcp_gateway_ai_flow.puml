@@ -1,0 +1,100 @@
+@startuml
+title Carpuncle Cloud / Lana-KI - MCP, Gateway und alle AI-Konten Flow
+caption Stand: REDACTED technische Zielarchitektur. Keine Secrets, Tokens, Keys oder privaten URLs.
+
+skinparam shadowing false
+skinparam linetype ortho
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor "Admin / Thomas" as Admin
+actor "Lana-KI\nOrchestrator" as Lana
+
+cloud "Internet" as Internet
+node "Cloudflare\nDNS / Tunnel / Zero Trust / Worker\n[REDACTED TOKENS]" as Cloudflare
+node "Node A - Hetzner Edge\nGateway / MCP-Routing / Control Plane\nKeine Heavy-KI\nKeine Master-Secrets" as NodeA
+node "Node B - Windows Primary Compute\nLM Studio 127.0.0.1:1234\nComfyUI 127.0.0.1:8188" as NodeB
+node "Node C - RunPod\nBurst GPU / On-Demand Jobs" as NodeC
+node "Node D - Debian Laptop\nAdmin / Monitoring / Relay\nLAN: [REDACTED_LAN_IP]" as NodeD
+node "Node E - GCP\nExperimentelle Worker\nlana-ki-cloud-core / lana-490418" as NodeE
+database "NAS / FritzBox\nVault / Cold Storage / Backups\noffline-first" as NAS
+
+package "MCP / Repo-Kontext" as MCP {
+  artifact "README.md" as README
+  artifact "PROJECT_CONTEXT.md" as PROJECT_CONTEXT
+  artifact "SECURITY.md" as SECURITY
+  artifact "MCP.md" as MCPMD
+  artifact ".mcp/repo.context.json" as REPOCTX
+  artifact ".mcp/allowed-tools.json" as TOOLS
+  artifact ".mcp/safety-policy.md" as SAFETY
+}
+
+package "GitHub Repos\ncarpu86/* / carpuapp/* / lana-ki-de/*" as GITHUB {
+  component "Repo Context" as RepoContext
+  component "Issues / PRs" as Issues
+  component "Actions / Audits" as Actions
+}
+
+package "AI-Konten / Provider\nKeine Secret-Werte speichern" as AI {
+  component "Local LM Studio" as LMStudio
+  component "Local ComfyUI" as Comfy
+  component "OpenAI / API\n[REDACTED]" as OpenAI
+  component "Gemini / Google AI\n[REDACTED]" as Gemini
+  component "Azure OpenAI\nUnbestätigt / optional" as AzureAI
+  component "RunPod API\n[REDACTED]" as RunPodAPI
+}
+
+package "Notizbuch / Wissensablage" as NOTE {
+  database "SharePoint\ncarpu.sharepoint.com\nLana_KI/Lana_Notizbuch" as SharePoint
+  database "GitHub\ncarpu86/Lana_Notitzbuch.md" as GitNotebook
+  database "Box.com\nNotizbuch-Spiegel\nUnbestätigt / manuell anzubinden" as Box
+  database "Agent Builder\nGCP Sandbox/Core\nUnbestätigt / API-Connector offen" as AgentBuilder
+}
+
+Admin --> Lana : Auftrag / Audit / Freigabe
+Lana --> SharePoint : schreibt Notizen / Architektur / Audit\nnur redigierte Daten
+Lana --> GitNotebook : versioniert technische Doku\nkeine Secrets
+Lana --> Box : optionaler Sync\nnur redigierte Kopien
+Lana --> AgentBuilder : Kontext / Agenten-Konfiguration\nkeine Secrets
+
+Internet --> Cloudflare : HTTPS / Gateway-Domain
+Cloudflare --> NodeA : Tunnel / Worker / Zero Trust
+NodeA --> MCP : liest Repo-Kontext / Tool-Policy
+NodeA --> NodeB : routet lokale KI-Anfragen\nwenn erreichbar
+NodeA --> NodeC : Burst-Fallback\nnur bei Bedarf
+NodeA --> NodeE : experimentelle Worker\nbudgetlimitiert
+NodeD --> NodeA : Admin / Monitoring
+NodeD --> NodeB : Admin / Relay / Healthchecks
+NodeB --> NAS : Backup / Restore / Medien / Logs\nnur sichere Pfade
+SharePoint --> NAS : keine Runtime, nur Doku/Sync
+GitNotebook --> MCP : MCP-Baseline und Audit-Stand
+
+NodeB --> LMStudio : Text-Inferenz lokal
+NodeB --> Comfy : Bild/Medien lokal
+NodeC --> RunPodAPI : Heavy GPU Fallback
+NodeE --> Gemini : GCP / Agent Tests
+NodeA --> OpenAI : optional Provider-Routing\nnur via Vault/Env-Referenz
+NodeA --> AzureAI : optional Fallback\nStatus unbestätigt
+
+note right of SharePoint
+Kanonisches Notizbuch:
+Lana_KI/Lana_Notizbuch
+
+Keine Secrets speichern.
+end note
+
+note bottom of NodeB
+Local-First:
+1. LM Studio lokal
+2. ComfyUI lokal
+3. erst dann Cloud/Burst
+end note
+
+note bottom of AI
+Alle Keys/Tokens:
+[REDACTED]
+Nur Referenzen dokumentieren.
+Rotation bei Leaks.
+end note
+
+@enduml
